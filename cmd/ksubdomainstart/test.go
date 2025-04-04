@@ -1,8 +1,8 @@
 package ksubdomainstart
 
 import (
-	"github.com/boy-hack/ksubdomain/core/options"
-	"github.com/boy-hack/ksubdomain/runner"
+	"github.com/forktopot/ksubdomain/core/options"
+	"github.com/forktopot/ksubdomain/runner"
 	"github.com/urfave/cli/v2"
 )
 

@@ -2,11 +2,11 @@ package options
 
 import (
 	"fmt"
-	"github.com/boy-hack/ksubdomain/core"
-	"github.com/boy-hack/ksubdomain/core/device"
-	"github.com/boy-hack/ksubdomain/core/gologger"
-	"github.com/boy-hack/ksubdomain/runner/outputter"
-	"github.com/boy-hack/ksubdomain/runner/processbar"
+	"github.com/forktopot/ksubdomain/core"
+	"github.com/forktopot/ksubdomain/core/device"
+	"github.com/forktopot/ksubdomain/core/gologger"
+	"github.com/forktopot/ksubdomain/runner/outputter"
+	"github.com/forktopot/ksubdomain/runner/processbar"
 	"github.com/google/gopacket/layers"
 	"strconv"
 	"strings"

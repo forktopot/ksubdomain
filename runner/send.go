@@ -1,9 +1,9 @@
 package runner
 
 import (
-	"github.com/boy-hack/ksubdomain/core/device"
-	"github.com/boy-hack/ksubdomain/core/gologger"
-	"github.com/boy-hack/ksubdomain/runner/statusdb"
+	"github.com/forktopot/ksubdomain/core/device"
+	"github.com/forktopot/ksubdomain/core/gologger"
+	"github.com/forktopot/ksubdomain/runner/statusdb"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
