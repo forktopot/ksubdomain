@@ -38,6 +38,7 @@ func dnsRecord2String(rr layers.DNSResourceRecord) (string, error) {
 			}
 		}
 	}
+	fmt.Println("123")
 	return "", errors.New("dns record error")
 }
 
