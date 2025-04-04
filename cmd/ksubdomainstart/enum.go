@@ -11,6 +11,7 @@ import (
 	"github.com/forktopot/ksubdomain/runner/outputter"
 	"github.com/forktopot/ksubdomain/runner/outputter/output"
 	"github.com/forktopot/ksubdomain/runner/processbar"
+	"github.com/urfave/cli/v2"
 	"math/rand"
 	"os"
 )
