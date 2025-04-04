@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/forktopot/ksubdomain/cmd/ksubdomainstart"
 	"github.com/forktopot/ksubdomain/core/conf"
 	"github.com/forktopot/ksubdomain/core/gologger"
@@ -24,4 +25,5 @@ func main() {
 	if err != nil {
 		gologger.Fatalf(err.Error())
 	}
+	fmt.Println("123")
 }
