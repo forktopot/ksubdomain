@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"github.com/forktopot/ksubdomain/core/device"
 	"github.com/forktopot/ksubdomain/core/gologger"
 	"github.com/forktopot/ksubdomain/runner/statusdb"
@@ -93,5 +92,4 @@ func send(domain string, dnsname string, ether *device.EtherTable, dnsid uint16,
 	if err != nil {
 		gologger.Warningf("WritePacketDate error:%s\n", err.Error())
 	}
-	fmt.Println("123")
 }
