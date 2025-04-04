@@ -1,6 +1,6 @@
 module github.com/forktopot/ksubdomain
 
-go 1.23.7
+go 1.23.8
 
 require (
 	github.com/google/gopacket v1.1.19
@@ -16,7 +16,6 @@ require (
 
 require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
-	github.com/boy-hack/ksubdomain v1.9.9 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect

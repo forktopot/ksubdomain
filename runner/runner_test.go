@@ -2,12 +2,12 @@ package runner
 
 import (
 	"context"
-	"github.com/boy-hack/ksubdomain/core"
-	"github.com/boy-hack/ksubdomain/core/gologger"
-	"github.com/boy-hack/ksubdomain/core/options"
-	"github.com/boy-hack/ksubdomain/runner/outputter"
-	"github.com/boy-hack/ksubdomain/runner/outputter/output"
-	"github.com/boy-hack/ksubdomain/runner/processbar"
+	"github.com/forktopot/ksubdomain/core"
+	"github.com/forktopot/ksubdomain/core/gologger"
+	"github.com/forktopot/ksubdomain/core/options"
+	"github.com/forktopot/ksubdomain/runner/outputter"
+	"github.com/forktopot/ksubdomain/runner/outputter/output"
+	"github.com/forktopot/ksubdomain/runner/processbar"
 	"testing"
 )
 
