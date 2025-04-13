@@ -3,38 +3,34 @@ package ksubdomainstart
 import (
 	"bufio"
 	"context"
-	"github.com/forktopot/ksubdomain/core"
-	"github.com/forktopot/ksubdomain/core/gologger"
-	"github.com/forktopot/ksubdomain/core/options"
-	"github.com/forktopot/ksubdomain/runner"
-	"github.com/forktopot/ksubdomain/runner/outputter"
-	"github.com/forktopot/ksubdomain/runner/outputter/output"
-	"github.com/forktopot/ksubdomain/runner/processbar"
+	"github.com/forktopot/ksubdomain/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/pkg/core/options"
+	"github.com/forktopot/ksubdomain/pkg/runner"
+	"github.com/forktopot/ksubdomain/pkg/runner/outputter"
+	output2 "github.com/forktopot/ksubdomain/pkg/runner/outputter/output"
+	processbar2 "github.com/forktopot/ksubdomain/pkg/runner/processbar"
 	"github.com/urfave/cli/v2"
 	"os"
 )
 
 var commonFlags = []cli.Flag{
-	&cli.StringFlag{
-		Name:     "domain",
-		Aliases:  []string{"d"},
-		Usage:    "域名",
-		Required: false,
-		Value:    "",
+	&cli.StringSliceFlag{
+		Name:    "domain",
+		Aliases: []string{"d"},
+		Usage:   "域名",
 	},
 	&cli.StringFlag{
 		Name:     "band",
 		Aliases:  []string{"b"},
 		Usage:    "宽带的下行速度，可以5M,5K,5G",
 		Required: false,
-		Value:    "2m",
+		Value:    "3m",
 	},
-	&cli.StringFlag{
+	&cli.StringSliceFlag{
 		Name:     "resolvers",
 		Aliases:  []string{"r"},
-		Usage:    "dns服务器文件路径，一行一个dns地址，默认会使用内置dns",
+		Usage:    "dns服务器，默认会使用内置dns",
 		Required: false,
-		Value:    "",
 	},
 	&cli.StringFlag{
 		Name:     "output",
@@ -42,6 +38,13 @@ var commonFlags = []cli.Flag{
 		Usage:    "输出文件名",
 		Required: false,
 		Value:    "",
+	},
+	&cli.StringFlag{
+		Name:     "output-type",
+		Aliases:  []string{"oy"},
+		Usage:    "输出文件类型: json, txt, csv",
+		Required: false,
+		Value:    "txt",
 	},
 	&cli.BoolFlag{
 		Name:  "silent",
@@ -64,33 +67,37 @@ var commonFlags = []cli.Flag{
 		Value: false,
 	},
 	&cli.BoolFlag{
-		Name:    "only-domain",
-		Aliases: []string{"od"},
-		Usage:   "只打印域名，不显示ip",
-		Value:   false,
-	},
-	&cli.BoolFlag{
 		Name:    "not-print",
 		Aliases: []string{"np"},
 		Usage:   "不打印域名结果",
 		Value:   false,
 	},
 	&cli.StringFlag{
-		Name:  "dns-type",
-		Usage: "dns类型 可以是a,aaaa,ns,cname,txt",
-		Value: "a",
+		Name:    "eth",
+		Aliases: []string{"e"},
+		Usage:   "指定网卡名称",
+	},
+	&cli.StringFlag{
+		Name:  "wild-filter-mode",
+		Usage: "泛解析过滤模式[从最终结果过滤泛解析域名]: basic(基础), advanced(高级), none(不过滤)",
+		Value: "none",
+	},
+	&cli.BoolFlag{
+		Name:     "predict",
+		Usage:    "启用预测域名模式",
+		Required: false,
 	},
 }
 
 var VerifyCommand = &cli.Command{
-	Name:    runner.VerifyType,
+	Name:    string(options.VerifyType),
 	Aliases: []string{"v"},
 	Usage:   "验证模式",
 	Flags: append([]cli.Flag{
 		&cli.StringFlag{
 			Name:     "filename",
 			Aliases:  []string{"f"},
-			Usage:    "验证域名文件路径",
+			Usage:    "验证域名的文件路径",
 			Required: false,
 			Value:    "",
 		},
@@ -100,10 +107,9 @@ var VerifyCommand = &cli.Command{
 			cli.ShowCommandHelpAndExit(c, "verify", 0)
 		}
 		var domains []string
-		var writer []outputter.Output
-		var processBar processbar.ProcessBar = &processbar.ScreenProcess{}
-		if c.String("domain") != "" {
-			domains = append(domains, c.String("domain"))
+		var processBar processbar2.ProcessBar = &processbar2.ScreenProcess{}
+		if c.StringSlice("domain") != nil {
+			domains = append(domains, c.StringSlice("domain")...)
 		}
 		if c.Bool("stdin") {
 			scanner := bufio.NewScanner(os.Stdin)
@@ -112,16 +118,8 @@ var VerifyCommand = &cli.Command{
 				domains = append(domains, scanner.Text())
 			}
 		}
-		var total int = 0
-		total += len(domains)
 		render := make(chan string)
-		if c.String("filename") != "" {
-			t, err := core.LinesReaderInFile(c.String("filename"))
-			if err != nil {
-				gologger.Fatalf("打开文件:%s 出现错误:%s", c.String("filename"), err.Error())
-			}
-			total += t
-		}
+		// 读取文件
 		go func() {
 			for _, line := range domains {
 				render <- line
@@ -141,38 +139,55 @@ var VerifyCommand = &cli.Command{
 			close(render)
 		}()
 
-		onlyDomain := c.Bool("only-domain")
-		if c.String("output") != "" {
-			fileWriter, err := output.NewFileOutput(c.String("output"), onlyDomain)
-			if err != nil {
-				gologger.Fatalf(err.Error())
-			}
-			writer = append(writer, fileWriter)
-		}
+		// 输出到屏幕
 		if c.Bool("not-print") {
 			processBar = nil
 		}
-		screenWriter, err := output.NewScreenOutput(onlyDomain)
+		screenWriter, err := output2.NewScreenOutput()
 		if err != nil {
 			gologger.Fatalf(err.Error())
 		}
-		writer = append(writer, screenWriter)
+		var writer []outputter.Output
+		if !c.Bool("not-print") {
+			writer = append(writer, screenWriter)
+		}
+		if c.String("output") != "" {
+			outputFile := c.String("output")
+			outputType := c.String("output-type")
+			wildFilterMode := c.String("wild-filter-mode")
+			switch outputType {
+			case "txt":
+				p, err := output2.NewPlainOutput(outputFile, wildFilterMode)
+				if err != nil {
+					gologger.Fatalf(err.Error())
+				}
+				writer = append(writer, p)
+			case "json":
+				p := output2.NewJsonOutput(outputFile, wildFilterMode)
+				writer = append(writer, p)
+			case "csv":
+				p := output2.NewCsvOutput(outputFile, wildFilterMode)
+				writer = append(writer, p)
+			default:
+				gologger.Fatalf("输出类型错误:%s 暂不支持", outputType)
+			}
+		}
 
 		opt := &options.Options{
-			Rate:        options.Band2Rate(c.String("band")),
-			Domain:      render,
-			DomainTotal: total,
-			Resolvers:   options.GetResolvers(c.String("resolvers")),
-			Silent:      c.Bool("silent"),
-			TimeOut:     c.Int("timeout"),
-			Retry:       c.Int("retry"),
-			Method:      runner.VerifyType,
-			DnsType:     c.String("dns-type"),
-			Writer:      writer,
-			ProcessBar:  processBar,
+			Rate:               options.Band2Rate(c.String("band")),
+			Domain:             render,
+			Resolvers:          options.GetResolvers(c.StringSlice("resolvers")),
+			Silent:             c.Bool("silent"),
+			TimeOut:            c.Int("timeout"),
+			Retry:              c.Int("retry"),
+			Method:             options.VerifyType,
+			Writer:             writer,
+			ProcessBar:         processBar,
+			EtherInfo:          options.GetDeviceConfig(c.String("eth")),
+			WildcardFilterMode: c.String("wild-filter-mode"),
+			Predict:            c.Bool("predict"),
 		}
 		opt.Check()
-		opt.EtherInfo = options.GetDeviceConfig()
 		ctx := context.Background()
 		r, err := runner.New(opt)
 		if err != nil {

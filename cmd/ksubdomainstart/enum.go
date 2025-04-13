@@ -3,32 +3,25 @@ package ksubdomainstart
 import (
 	"bufio"
 	"context"
-	"github.com/forktopot/ksubdomain/core"
-	"github.com/forktopot/ksubdomain/core/dns"
-	"github.com/forktopot/ksubdomain/core/gologger"
-	"github.com/forktopot/ksubdomain/core/options"
-	"github.com/forktopot/ksubdomain/runner"
-	"github.com/forktopot/ksubdomain/runner/outputter"
-	"github.com/forktopot/ksubdomain/runner/outputter/output"
-	"github.com/forktopot/ksubdomain/runner/processbar"
-	"github.com/urfave/cli/v2"
 	"math/rand"
 	"os"
+
+	core2 "github.com/forktopot/ksubdomain/pkg/core"
+	"github.com/forktopot/ksubdomain/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/pkg/core/ns"
+	"github.com/forktopot/ksubdomain/pkg/core/options"
+	"github.com/forktopot/ksubdomain/pkg/runner"
+	"github.com/forktopot/ksubdomain/pkg/runner/outputter"
+	output2 "github.com/forktopot/ksubdomain/pkg/runner/outputter/output"
+	processbar2 "github.com/forktopot/ksubdomain/pkg/runner/processbar"
+	"github.com/urfave/cli/v2"
 )
 
 var EnumCommand = &cli.Command{
-	Name:    runner.EnumType,
+	Name:    string(options.EnumType),
 	Aliases: []string{"e"},
 	Usage:   "枚举域名",
 	Flags: append(commonFlags, []cli.Flag{
-
-		&cli.StringFlag{
-			Name:     "domainList",
-			Aliases:  []string{"dl"},
-			Usage:    "从文件中指定域名",
-			Required: false,
-			Value:    "",
-		},
 		&cli.StringFlag{
 			Name:     "filename",
 			Aliases:  []string{"f"},
@@ -37,26 +30,9 @@ var EnumCommand = &cli.Command{
 			Value:    "",
 		},
 		&cli.BoolFlag{
-			Name:  "skip-wild",
-			Usage: "跳过泛解析域名",
-			Value: false,
-		},
-		&cli.BoolFlag{
 			Name:  "ns",
 			Usage: "读取域名ns记录并加入到ns解析器中",
 			Value: false,
-		},
-		&cli.IntFlag{
-			Name:    "level",
-			Aliases: []string{"l"},
-			Usage:   "枚举几级域名，默认为2，二级域名",
-			Value:   2,
-		},
-		&cli.StringFlag{
-			Name:    "level-dict",
-			Aliases: []string{"ld"},
-			Usage:   "枚举多级域名的字典文件，当level大于2时候使用，不填则会默认",
-			Value:   "",
 		},
 	}...),
 	Action: func(c *cli.Context) error {
@@ -64,21 +40,12 @@ var EnumCommand = &cli.Command{
 			cli.ShowCommandHelpAndExit(c, "enum", 0)
 		}
 		var domains []string
-		var writer []outputter.Output
-		var processBar processbar.ProcessBar = &processbar.ScreenProcess{}
+		var processBar processbar2.ProcessBar = &processbar2.ScreenProcess{}
 		var err error
-		var domainTotal int = 0
 
 		// handle domain
-		if c.String("domain") != "" {
-			domains = append(domains, c.String("domain"))
-		}
-		if c.String("domainList") != "" {
-			dl, err := core.LinesInFile(c.String("domainList"))
-			if err != nil {
-				gologger.Fatalf("读取domain文件失败:%s\n", err.Error())
-			}
-			domains = append(dl, domains...)
+		if c.StringSlice("domain") != nil {
+			domains = append(domains, c.StringSlice("domain")...)
 		}
 		if c.Bool("stdin") {
 			scanner := bufio.NewScanner(os.Stdin)
@@ -87,67 +54,52 @@ var EnumCommand = &cli.Command{
 				domains = append(domains, scanner.Text())
 			}
 		}
-		if c.Bool("skip-wild") {
-			tmp := domains
-			domains = []string{}
-			for _, sub := range tmp {
-				if !core.IsWildCard(sub) {
-					domains = append(domains, sub)
-				} else {
-					gologger.Infof("域名:%s 存在泛解析,已跳过", sub)
+
+		wildIPS := make([]string, 0)
+		if c.String("wild-filter-mode") != "none" {
+			for _, sub := range domains {
+				ok, ips := runner.IsWildCard(sub)
+				if ok {
+					wildIPS = append(wildIPS, ips...)
+					gologger.Infof("发现泛解析域名:%s", sub)
 				}
 			}
-		}
-
-		var subdomainDict []string
-		if c.String("filename") == "" {
-			subdomainDict = core.GetDefaultSubdomainData()
-		} else {
-			subdomainDict, err = core.LinesInFile(c.String("filename"))
-			if err != nil {
-				gologger.Fatalf("打开文件:%s 错误:%s", c.String("filename"), err.Error())
-			}
-		}
-
-		levelDict := c.String("level-dict")
-		var levelDomains []string
-		if levelDict != "" {
-			dl, err := core.LinesInFile(levelDict)
-			if err != nil {
-				gologger.Fatalf("读取domain文件失败:%s,请检查--level-dict参数\n", err.Error())
-			}
-			levelDomains = dl
-		} else if c.Int("level") > 2 {
-			levelDomains = core.GetDefaultSubNextData()
 		}
 
 		render := make(chan string)
 		go func() {
 			defer close(render)
-			for _, sub := range subdomainDict {
+			filename := c.String("filename")
+			if filename == "" {
+				subdomainDict := core2.GetDefaultSubdomainData()
 				for _, domain := range domains {
-					dd := sub + "." + domain
-					render <- dd
-					if len(levelDomains) > 0 {
-						for _, sub2 := range levelDomains {
-							dd2 := sub2 + "." + dd
-							render <- dd2
-						}
+					for _, sub := range subdomainDict {
+						dd := sub + "." + domain
+						render <- dd
+					}
+				}
+			} else {
+				f2, err := os.Open(filename)
+				if err != nil {
+					gologger.Fatalf("打开文件:%s 出现错误:%s", c.String("filename"), err.Error())
+				}
+				defer f2.Close()
+				iofile := bufio.NewScanner(f2)
+				iofile.Split(bufio.ScanLines)
+				for iofile.Scan() {
+					sub := iofile.Text()
+					for _, domain := range domains {
+						render <- sub + "." + domain
 					}
 				}
 			}
 		}()
-		domainTotal = len(subdomainDict) * len(domains)
-		if len(levelDomains) > 0 {
-			domainTotal *= len(levelDomains)
-		}
-
 		// 取域名的dns,加入到resolver中
 		specialDns := make(map[string][]string)
-		defaultResolver := options.GetResolvers(c.String("resolvers"))
+		defaultResolver := options.GetResolvers(c.StringSlice("resolvers"))
 		if c.Bool("ns") {
 			for _, domain := range domains {
-				nsServers, ips, err := dns.LookupNS(domain, defaultResolver[rand.Intn(len(defaultResolver))])
+				nsServers, ips, err := ns.LookupNS(domain, defaultResolver[rand.Intn(len(defaultResolver))])
 				if err != nil {
 					continue
 				}
@@ -156,41 +108,62 @@ var EnumCommand = &cli.Command{
 			}
 
 		}
-		onlyDomain := c.Bool("only-domain")
-
-		if c.String("output") != "" {
-			fileWriter, err := output.NewFileOutput(c.String("output"), onlyDomain)
-			if err != nil {
-				gologger.Fatalf(err.Error())
-			}
-			writer = append(writer, fileWriter)
-		}
 		if c.Bool("not-print") {
 			processBar = nil
 		}
 
-		screenWriter, err := output.NewScreenOutput(onlyDomain)
+		// 输出到屏幕
+		if c.Bool("not-print") {
+			processBar = nil
+		}
+
+		screenWriter, err := output2.NewScreenOutput()
 		if err != nil {
 			gologger.Fatalf(err.Error())
 		}
-		writer = append(writer, screenWriter)
+		var writer []outputter.Output
+		if !c.Bool("not-print") {
+			writer = append(writer, screenWriter)
+		}
+		if c.String("output") != "" {
+			outputFile := c.String("output")
+			outputType := c.String("output-type")
+			wildFilterMode := c.String("wild-filter-mode")
+			switch outputType {
+			case "txt":
+				p, err := output2.NewPlainOutput(outputFile, wildFilterMode)
+				if err != nil {
+					gologger.Fatalf(err.Error())
+				}
+				writer = append(writer, p)
+			case "json":
+				p := output2.NewJsonOutput(outputFile, wildFilterMode)
+				writer = append(writer, p)
+			case "csv":
+				p := output2.NewCsvOutput(outputFile, wildFilterMode)
+				writer = append(writer, p)
+			default:
+				gologger.Fatalf("输出类型错误:%s 暂不支持", outputType)
+			}
+		}
 
 		opt := &options.Options{
-			Rate:             options.Band2Rate(c.String("band")),
-			Domain:           render,
-			DomainTotal:      domainTotal,
-			Resolvers:        defaultResolver,
-			Silent:           c.Bool("silent"),
-			TimeOut:          c.Int("timeout"),
-			Retry:            c.Int("retry"),
-			Method:           runner.VerifyType,
-			DnsType:          c.String("dns-type"),
-			Writer:           writer,
-			ProcessBar:       processBar,
-			SpecialResolvers: specialDns,
+			Rate:               options.Band2Rate(c.String("band")),
+			Domain:             render,
+			Resolvers:          defaultResolver,
+			Silent:             c.Bool("silent"),
+			TimeOut:            c.Int("timeout"),
+			Retry:              c.Int("retry"),
+			Method:             options.VerifyType,
+			Writer:             writer,
+			ProcessBar:         processBar,
+			SpecialResolvers:   specialDns,
+			WildcardFilterMode: c.String("wild-filter-mode"),
+			WildIps:            wildIPS,
+			Predict:            c.Bool("predict"),
 		}
 		opt.Check()
-		opt.EtherInfo = options.GetDeviceConfig()
+		opt.EtherInfo = options.GetDeviceConfig(c.String("eth"))
 		ctx := context.Background()
 		r, err := runner.New(opt)
 		if err != nil {
@@ -199,7 +172,6 @@ var EnumCommand = &cli.Command{
 		}
 		r.RunEnumeration(ctx)
 		r.Close()
-
 		return nil
 	},
 }

@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/forktopot/ksubdomain/cmd/ksubdomainstart"
-	"github.com/forktopot/ksubdomain/core/conf"
-	"github.com/forktopot/ksubdomain/core/gologger"
+	"github.com/forktopot/ksubdomain/pkg/core/conf"
+	"github.com/forktopot/ksubdomain/pkg/core/gologger"
 	"github.com/urfave/cli/v2"
 	"os"
 )
@@ -17,6 +17,7 @@ func main() {
 			ksubdomainstart.EnumCommand,
 			ksubdomainstart.VerifyCommand,
 			ksubdomainstart.TestCommand,
+			ksubdomainstart.DeviceCommand,
 		},
 	}
 

@@ -1,10 +1,11 @@
 package ksubdomainstart
 
 import (
-	"github.com/forktopot/ksubdomain/core/conf"
-	"github.com/forktopot/ksubdomain/core/gologger"
-	"github.com/urfave/cli/v2"
 	"os"
+
+	"github.com/forktopot/ksubdomain/pkg/core/conf"
+	"github.com/forktopot/ksubdomain/pkg/core/gologger"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -16,6 +17,7 @@ func main() {
 			EnumCommand,
 			VerifyCommand,
 			TestCommand,
+			DeviceCommand,
 		},
 	}
 
