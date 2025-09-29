@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/forktopot/ksubdomain/cmd/ksubdomainstart"
-	"github.com/forktopot/ksubdomain/pkg/core/conf"
-	"github.com/forktopot/ksubdomain/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/v2/cmd/ksubdomainstart"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/conf"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
 	"github.com/urfave/cli/v2"
 	"os"
 )
