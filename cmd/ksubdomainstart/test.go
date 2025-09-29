@@ -1,4 +1,4 @@
-package main
+package ksubdomainstart
 
 import (
 	"github.com/forktopot/ksubdomain/v2/pkg/core/options"
