@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var deviceCommand = &cli.Command{
+var DeviceCommand = &cli.Command{
 	Name:  "device",
 	Usage: "列出系统所有可用的网卡信息",
 	Flags: []cli.Flag{},

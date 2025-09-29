@@ -14,10 +14,10 @@ func main() {
 		Version: conf.Version,
 		Usage:   conf.Description,
 		Commands: []*cli.Command{
-			enumCommand,
-			verifyCommand,
-			testCommand,
-			deviceCommand,
+			EnumCommand,
+			VerifyCommand,
+			TestCommand,
+			DeviceCommand,
 		},
 		Before: func(c *cli.Context) error {
 			silent := false

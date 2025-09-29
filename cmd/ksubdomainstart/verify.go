@@ -90,7 +90,7 @@ var commonFlags = []cli.Flag{
 	},
 }
 
-var verifyCommand = &cli.Command{
+var VerifyCommand = &cli.Command{
 	Name:    string(options.VerifyType),
 	Aliases: []string{"v"},
 	Usage:   "验证模式",

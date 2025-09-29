@@ -17,7 +17,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var enumCommand = &cli.Command{
+var EnumCommand = &cli.Command{
 	Name:    string(options.EnumType),
 	Aliases: []string{"e"},
 	Usage:   "枚举域名",
