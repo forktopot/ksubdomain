@@ -1,8 +1,8 @@
 package runner
 
 import (
-	"github.com/forktopot/ksubdomain/pkg/core/gologger"
-	"github.com/forktopot/ksubdomain/pkg/device"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/v2/pkg/device"
 	"github.com/phayes/freeport"
 	"net"
 	"time"

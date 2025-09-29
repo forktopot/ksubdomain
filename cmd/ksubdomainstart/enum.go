@@ -1,4 +1,4 @@
-package ksubdomainstart
+package main
 
 import (
 	"bufio"
@@ -6,18 +6,18 @@ import (
 	"math/rand"
 	"os"
 
-	core2 "github.com/forktopot/ksubdomain/pkg/core"
-	"github.com/forktopot/ksubdomain/pkg/core/gologger"
-	"github.com/forktopot/ksubdomain/pkg/core/ns"
-	"github.com/forktopot/ksubdomain/pkg/core/options"
-	"github.com/forktopot/ksubdomain/pkg/runner"
-	"github.com/forktopot/ksubdomain/pkg/runner/outputter"
-	output2 "github.com/forktopot/ksubdomain/pkg/runner/outputter/output"
-	processbar2 "github.com/forktopot/ksubdomain/pkg/runner/processbar"
+	core2 "github.com/forktopot/ksubdomain/v2/pkg/core"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/ns"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/options"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner/outputter"
+	output2 "github.com/forktopot/ksubdomain/v2/pkg/runner/outputter/output"
+	processbar2 "github.com/forktopot/ksubdomain/v2/pkg/runner/processbar"
 	"github.com/urfave/cli/v2"
 )
 
-var EnumCommand = &cli.Command{
+var enumCommand = &cli.Command{
 	Name:    string(options.EnumType),
 	Aliases: []string{"e"},
 	Usage:   "枚举域名",
@@ -34,13 +34,20 @@ var EnumCommand = &cli.Command{
 			Usage: "读取域名ns记录并加入到ns解析器中",
 			Value: false,
 		},
+		&cli.StringFlag{
+			Name:    "domain-list",
+			Aliases: []string{"ds"},
+			Usage:   "指定域名列表文件",
+			Value:   "",
+		},
 	}...),
 	Action: func(c *cli.Context) error {
 		if c.NumFlags() == 0 {
 			cli.ShowCommandHelpAndExit(c, "enum", 0)
 		}
 		var domains []string
-		var processBar processbar2.ProcessBar = &processbar2.ScreenProcess{}
+		processBar := &processbar2.ScreenProcess{Silent: c.Bool("silent")}
+
 		var err error
 
 		// handle domain
@@ -52,6 +59,20 @@ var EnumCommand = &cli.Command{
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
 				domains = append(domains, scanner.Text())
+			}
+		}
+		if c.String("domain-list") != "" {
+			filename := c.String("domain-list")
+			f, err := os.Open(filename)
+			if err != nil {
+				gologger.Fatalf("打开文件:%s 出现错误:%s", filename, err.Error())
+			}
+			defer f.Close()
+			scanner := bufio.NewScanner(f)
+			scanner.Split(bufio.ScanLines)
+			for scanner.Scan() {
+				domain := scanner.Text()
+				domains = append(domains, domain)
 			}
 		}
 
@@ -117,7 +138,7 @@ var EnumCommand = &cli.Command{
 			processBar = nil
 		}
 
-		screenWriter, err := output2.NewScreenOutput()
+		screenWriter, err := output2.NewScreenOutput(c.Bool("silent"))
 		if err != nil {
 			gologger.Fatalf(err.Error())
 		}
@@ -146,7 +167,6 @@ var EnumCommand = &cli.Command{
 				gologger.Fatalf("输出类型错误:%s 暂不支持", outputType)
 			}
 		}
-
 		opt := &options.Options{
 			Rate:               options.Band2Rate(c.String("band")),
 			Domain:             render,
@@ -163,7 +183,7 @@ var EnumCommand = &cli.Command{
 			Predict:            c.Bool("predict"),
 		}
 		opt.Check()
-		opt.EtherInfo = options.GetDeviceConfig(c.String("eth"))
+		opt.EtherInfo = options.GetDeviceConfig(defaultResolver)
 		ctx := context.Background()
 		r, err := runner.New(opt)
 		if err != nil {

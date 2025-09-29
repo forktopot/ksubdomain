@@ -1,3 +1,5 @@
+【已过时，待重写】
+
 一个简单的调用例子
 注意: 不要启动多个ksubdomain，ksubdomain启动一个就可以发挥最大作用。
 
@@ -6,12 +8,12 @@ package main
 
 import (
 	"context"
-	"github.com/boy-hack/ksubdomain/core/gologger"
-	"github.com/boy-hack/ksubdomain/core/options"
-	"github.com/boy-hack/ksubdomain/runner"
-	"github.com/boy-hack/ksubdomain/runner/outputter"
-	"github.com/boy-hack/ksubdomain/runner/outputter/output"
-	"github.com/boy-hack/ksubdomain/runner/processbar"
+	"github.com/forktopot/ksubdomain/core/gologger"
+	"github.com/forktopot/ksubdomain/core/options"
+	"github.com/forktopot/ksubdomain/runner"
+	"github.com/forktopot/ksubdomain/runner/outputter"
+	"github.com/forktopot/ksubdomain/runner/outputter/output"
+	"github.com/forktopot/ksubdomain/runner/processbar"
 	"strings"
 )
 

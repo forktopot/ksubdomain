@@ -1,16 +1,17 @@
-package ksubdomainstart
+package main
 
 import (
 	"bufio"
 	"context"
-	"github.com/forktopot/ksubdomain/pkg/core/gologger"
-	"github.com/forktopot/ksubdomain/pkg/core/options"
-	"github.com/forktopot/ksubdomain/pkg/runner"
-	"github.com/forktopot/ksubdomain/pkg/runner/outputter"
-	output2 "github.com/forktopot/ksubdomain/pkg/runner/outputter/output"
-	processbar2 "github.com/forktopot/ksubdomain/pkg/runner/processbar"
-	"github.com/urfave/cli/v2"
 	"os"
+
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/options"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner/outputter"
+	output2 "github.com/forktopot/ksubdomain/v2/pkg/runner/outputter/output"
+	processbar2 "github.com/forktopot/ksubdomain/v2/pkg/runner/processbar"
+	"github.com/urfave/cli/v2"
 )
 
 var commonFlags = []cli.Flag{
@@ -89,7 +90,7 @@ var commonFlags = []cli.Flag{
 	},
 }
 
-var VerifyCommand = &cli.Command{
+var verifyCommand = &cli.Command{
 	Name:    string(options.VerifyType),
 	Aliases: []string{"v"},
 	Usage:   "验证模式",
@@ -107,7 +108,7 @@ var VerifyCommand = &cli.Command{
 			cli.ShowCommandHelpAndExit(c, "verify", 0)
 		}
 		var domains []string
-		var processBar processbar2.ProcessBar = &processbar2.ScreenProcess{}
+		processBar := &processbar2.ScreenProcess{Silent: c.Bool("silent")}
 		if c.StringSlice("domain") != nil {
 			domains = append(domains, c.StringSlice("domain")...)
 		}
@@ -143,7 +144,7 @@ var VerifyCommand = &cli.Command{
 		if c.Bool("not-print") {
 			processBar = nil
 		}
-		screenWriter, err := output2.NewScreenOutput()
+		screenWriter, err := output2.NewScreenOutput(c.Bool("silent"))
 		if err != nil {
 			gologger.Fatalf(err.Error())
 		}
@@ -172,18 +173,18 @@ var VerifyCommand = &cli.Command{
 				gologger.Fatalf("输出类型错误:%s 暂不支持", outputType)
 			}
 		}
-
+		resolver := options.GetResolvers(c.StringSlice("resolvers"))
 		opt := &options.Options{
 			Rate:               options.Band2Rate(c.String("band")),
 			Domain:             render,
-			Resolvers:          options.GetResolvers(c.StringSlice("resolvers")),
+			Resolvers:          resolver,
 			Silent:             c.Bool("silent"),
 			TimeOut:            c.Int("timeout"),
 			Retry:              c.Int("retry"),
 			Method:             options.VerifyType,
 			Writer:             writer,
 			ProcessBar:         processBar,
-			EtherInfo:          options.GetDeviceConfig(c.String("eth")),
+			EtherInfo:          options.GetDeviceConfig(resolver),
 			WildcardFilterMode: c.String("wild-filter-mode"),
 			Predict:            c.Bool("predict"),
 		}

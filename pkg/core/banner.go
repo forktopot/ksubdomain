@@ -1,8 +1,9 @@
 package core
 
 import (
-	"github.com/forktopot/ksubdomain/pkg/core/conf"
-	"github.com/forktopot/ksubdomain/pkg/core/gologger"
+	"fmt"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/conf"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
 )
 
 const banner = `
@@ -14,7 +15,9 @@ const banner = `
 
 `
 
-func ShowBanner() {
-	gologger.Printf(banner)
+func ShowBanner(silent bool) {
+	if !silent {
+		fmt.Printf(banner)
+	}
 	gologger.Infof("Current Version: %s\n", conf.Version)
 }

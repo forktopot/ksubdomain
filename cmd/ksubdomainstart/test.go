@@ -1,12 +1,12 @@
-package ksubdomainstart
+package main
 
 import (
-	"github.com/forktopot/ksubdomain/pkg/core/options"
-	"github.com/forktopot/ksubdomain/pkg/runner"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/options"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner"
 	"github.com/urfave/cli/v2"
 )
 
-var TestCommand = &cli.Command{
+var testCommand = &cli.Command{
 	Name:  string(options.TestType),
 	Usage: "测试本地网卡的最大发送速度",
 	Flags: []cli.Flag{
@@ -17,7 +17,7 @@ var TestCommand = &cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
-		ethTable := options.GetDeviceConfig(c.String("eth"))
+		ethTable := options.GetDeviceConfig(nil)
 		runner.TestSpeed(ethTable)
 		return nil
 	},

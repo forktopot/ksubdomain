@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"github.com/forktopot/ksubdomain/pkg/core/gologger"
-	"github.com/forktopot/ksubdomain/pkg/runner/result"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner/result"
 	"sort"
 	"strings"
 )

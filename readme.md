@@ -1,6 +1,6 @@
 # KSubdomain: 极速无状态子域名爆破工具
 
-[![Release](https://img.shields.io/github/release/boy-hack/ksubdomain.svg)](https://github.com/boy-hack/ksubdomain/releases) [![Go Report Card](https://goreportcard.com/badge/github.com/boy-hack/ksubdomain)](https://goreportcard.com/report/github.com/boy-hack/ksubdomain) [![License](https://img.shields.io/github/license/boy-hack/ksubdomain)](https://github.com/boy-hack/ksubdomain/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/release/forktopot/ksubdomain.svg)](https://github.com/forktopot/ksubdomain/releases) [![Go Report Card](https://goreportcard.com/badge/github.com/forktopot/ksubdomain)](https://goreportcard.com/report/github.com/forktopot/ksubdomain) [![License](https://img.shields.io/github/license/forktopot/ksubdomain)](https://github.com/forktopot/ksubdomain/blob/main/LICENSE)
 
 **KSubdomain 是一款基于无状态技术的子域名爆破工具，带来前所未有的扫描速度和极低的内存占用。** 告别传统工具的效率瓶颈，体验闪电般的 DNS 查询，同时拥有可靠的状态表重发机制，确保结果的完整性。 KSubdomain 支持 Windows、Linux 和 macOS，是进行大规模DNS资产探测的理想选择。
 
@@ -54,7 +54,7 @@ KSubdomain 2.0 版本引入了多项底层优化，进一步压榨性能潜力�
 
 ## 📦 安装
 
-1.  **下载预编译二进制文件:** 前往 [Releases](https://github.com/boy-hack/ksubdomain/releases) 页面下载对应系统的最新版本。
+1.  **下载预编译二进制文件:** 前往 [Releases](https://github.com/forktopot/ksubdomain/releases) 页面下载对应系统的最新版本。
 2.  **安装 `libpcap` 依赖:**
     *   **Windows:** 下载并安装 [Npcap](https://npcap.com/) 驱动 (WinPcap 可能无效)。
     *   **Linux:** 已静态编译打包 `libpcap`，通常无需额外操作。若遇问题，请尝试安装 `libpcap-dev` 或 `libcap-devel` 包。
@@ -67,7 +67,7 @@ KSubdomain 2.0 版本引入了多项底层优化，进一步压榨性能潜力�
 确保您已安装 Go 1.23 版本和 `libpcap` 环境。
 
 ```bash
-go install -v github.com/boy-hack/ksubdomain/cmd/ksubdomain@latest
+go install -v github.com/forktopot/ksubdomain/v2/cmd/ksubdomain@latest
 # 二进制文件通常位于 $GOPATH/bin 或 $HOME/go/bin
 ```
 
@@ -180,14 +180,12 @@ cat domains.txt | ./ksubdomain e --stdin -b 10M
 
 *   **带宽自动适配:** 只需使用 `-b` 参数指定你的公网下行带宽 (如 `-b 10m`), KSubdomain 会自动优化发包速率。
 *   **测试最大速率:** 运行 `./ksubdomain test` 测试当前环境的最大理论发包速率。
-*   **自动网卡检测:** KSubdomain 会自动检测可用网卡。可通过环境变量 `KSubdomainEth` 指定网卡，或--eth制定网卡名称。
+*   **自动网卡检测:** KSubdomain 会自动检测可用网卡。
 *   **进度显示:** 实时进度条显示 成功数 / 发送数 / 队列长度 / 接收数 / 失败数 / 已耗时。
 *   **参数调优:** 根据网络质量和目标域名数量，调整 `--retry` 和 `--timeout` 参数以获得最佳效果。当 `--retry` 为 -1 时，将无限重试直至所有请求成功或超时。
-*   **泛解析过滤:** 支持自动检测并过滤泛解析域名 (枚举模式下使用 `--skip-wild`)。
 *   **多种输出格式:** 支持 `txt` (实时输出), `json` (完成后输出), `csv` (完成后输出)。通过 `-o` 指定文件名后缀即可 (如 `result.json`)。
 *   **环境变量配置:**
     *   `KSubdomainConfig`: 指定配置文件的路径。
-    *   `KSubdomainEth`: 指定使用的网卡名称 (例如 `eth0`)。
 
 ## 💡 参考
 

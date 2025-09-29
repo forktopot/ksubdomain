@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/forktopot/ksubdomain/pkg/runner/result"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner/result"
 
-	"github.com/forktopot/ksubdomain/pkg/utils"
+	"github.com/forktopot/ksubdomain/v2/pkg/utils"
 )
 
 type JsonOutPut struct {
@@ -28,10 +29,8 @@ func (f *JsonOutPut) WriteDomainResult(domain result.Result) error {
 	return nil
 }
 
-func (f *JsonOutPut) Close() {
-}
-
-func (f *JsonOutPut) Finally() error {
+func (f *JsonOutPut) Close() error {
+	gologger.Infof("写入json文件:%s count:%d", f.filename, len(f.domains))
 	if len(f.domains) > 0 {
 		results := utils.WildFilterOutputResult(f.wildFilterMode, f.domains)
 		jsonBytes, err := json.Marshal(results)

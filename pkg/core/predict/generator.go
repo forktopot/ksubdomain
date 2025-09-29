@@ -4,8 +4,8 @@ import (
 	"bufio"
 	_ "embed"
 	"fmt"
-	"io"
 	"strings"
+	"sync"
 )
 
 //go:embed data/regular.cfg
@@ -20,12 +20,13 @@ type DomainGenerator struct {
 	patterns   []string            // 域名组合模式
 	subdomain  string              // 子域名部分
 	domain     string              // 根域名部分
-	output     io.Writer           // 输出接口
+	output     chan string         // 输出接口
 	count      int                 // 生成的域名计数
+	mu         sync.Mutex          // 保护count和output的互斥锁
 }
 
 // NewDomainGenerator 创建一个新的域名生成器
-func NewDomainGenerator(output io.Writer) (*DomainGenerator, error) {
+func NewDomainGenerator(output chan string) (*DomainGenerator, error) {
 	// 创建生成器实例
 	dg := &DomainGenerator{
 		categories: make(map[string][]string),
@@ -99,11 +100,13 @@ func (dg *DomainGenerator) SetBaseDomain(domain string) {
 
 // GenerateDomains 生成预测域名并实时输出
 func (dg *DomainGenerator) GenerateDomains() int {
+	dg.mu.Lock()
 	dg.count = 0
+	dg.mu.Unlock()
 
 	// 如果没有设置子域名，则直接返回
 	if dg.subdomain == "" && dg.domain == "" {
-		return dg.count
+		return 0
 	}
 
 	// 遍历所有模式
@@ -115,7 +118,10 @@ func (dg *DomainGenerator) GenerateDomains() int {
 		})
 	}
 
-	return dg.count
+	dg.mu.Lock()
+	result := dg.count
+	dg.mu.Unlock()
+	return result
 }
 
 // processPattern 递归处理模式中的标签替换
@@ -124,9 +130,11 @@ func (dg *DomainGenerator) processPattern(pattern string, replacements map[strin
 	startIdx := strings.Index(pattern, "{")
 	if startIdx == -1 {
 		// 没有更多标签，输出最终结果
-		if pattern != "" {
-			fmt.Fprint(dg.output, pattern)
+		if pattern != "" && dg.output != nil {
+			dg.mu.Lock()
+			dg.output <- pattern
 			dg.count++
+			dg.mu.Unlock()
 		}
 		return
 	}
@@ -173,7 +181,12 @@ func (dg *DomainGenerator) processPattern(pattern string, replacements map[strin
 }
 
 // PredictDomains 根据给定域名预测可能的域名变体，直接输出结果
-func PredictDomains(domain string, output io.Writer) (int, error) {
+func PredictDomains(domain string, output chan string) (int, error) {
+	// 检查输出对象是否为nil
+	if output == nil {
+		return 0, fmt.Errorf("输出对象不能为空")
+	}
+
 	// 创建域名生成器
 	generator, err := NewDomainGenerator(output)
 	if err != nil {

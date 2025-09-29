@@ -1,7 +1,7 @@
 package runner
 
 import (
-	"github.com/forktopot/ksubdomain/pkg/core"
+	"github.com/forktopot/ksubdomain/v2/pkg/core"
 	"net"
 )
 

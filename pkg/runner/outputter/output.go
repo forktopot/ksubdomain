@@ -1,11 +1,10 @@
 package outputter
 
 import (
-	"github.com/forktopot/ksubdomain/pkg/runner/result"
+	"github.com/forktopot/ksubdomain/v2/pkg/runner/result"
 )
 
 type Output interface {
 	WriteDomainResult(domain result.Result) error
-	Finally() error
-	Close()
+	Close() error
 }

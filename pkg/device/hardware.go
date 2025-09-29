@@ -1,7 +1,7 @@
 package device
 
 import (
-	"github.com/forktopot/ksubdomain/pkg/core/gologger"
+	"github.com/forktopot/ksubdomain/v2/pkg/core/gologger"
 	"gopkg.in/yaml.v3"
 	"net"
 )
